@@ -1,1 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imdiva — Каталог</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #162e58;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      max-width: 480px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 18px 18px 60px;
+      flex: 1;
+    }
+
+    /* Шапка с настоящим логотипом-картинкой */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+    }
+
+    .header img {
+      max-height: 65px;
+      width: auto;
+      display: inline-block;
+    }
+
+    /* Верхний блок: видео-прямоугольники */
+    .videos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 56px; 
+    }
+
+    .video-card {
+      background-color: #162e58;
+      aspect-ratio: 9 / 17; 
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 6px 14px rgba(22, 46, 88, 0.18);
+    }
+
+    .video-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border: none;
+      display: block;
+    }
+
+    /* Тонкая линия-разделитель */
+    .divider {
+      height: 1px;
+      background-color: #ededed;
+      margin: 0 0 35px 0;
+    }
+
+    /* Главная сетка каталога (3 колонки, белые карточки с тенью) */
+    .catalog-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .category-card {
+      background-color: #ffffff;
+      aspect-ratio: 3 / 4;
+      border-radius: 10px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      overflow: hidden;
+    }
+
+    .category-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.13);
+    }
+
+    .category-card img {
+      max-width: 85%;
+      max-height: 85%;
+      object-fit: contain;
+    }
+
+    /* ================================================= */
+    /* ЭКРАН ВНУТРИ КАТЕГОРИИ                            */
+    /* ================================================= */
+    .hidden {
+      display: none !important;
+    }
+
+    .top-nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: #162e58;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .current-cat-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #162e58;
+      text-align: right;
+      max-width: 65%;
+      line-height: 1.2;
+    }
+
+    /* Верхняя медленно вращающаяся лента квадратиков-категорий */
+    .mini-categories-scroll {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 4px 2px 14px 2px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #ededed;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mini-categories-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    .mini-categories-scroll {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .mini-cat-card {
+      flex: 0 0 calc((100% - 30px) / 4);
+      aspect-ratio: 1 / 1;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      border: 2px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .mini-cat-card.active {
+      border-color: #162e58;
+      transform: scale(1.03);
+    }
+
+    .mini-cat-card img {
+      max-width: 85%;
+      max-height: 85%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Нижняя сетка крупных карточек товаров (2 колонки) */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .product-card {
+      background-color: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-img-wrap {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      background-color: #162e58;
+      overflow: hidden;
+    }
+
+    .product-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .product-info {
+      padding: 10px 8px;
+      text-align: center;
+    }
+
+    .product-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #162e58;
+      margin-bottom: 3px;
+    }
+
+    .product-price {
+      font-size: 13px;
+      color: #a83246;
+      font-weight: bold;
+    }
+
+    /* Темно-синяя полоса внизу */
+    .bottom-bar {
+      height: 55px;
+      background-color: #162e58;
+      width: 100%;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Настоящий логотип-картинка -->
+    <header class="header" onclick="goBack()">
+      <img src="37918-removebg-preview.png" alt="Imdiva">
+    </header>
+
+    <!-- 1. ГЛАВНЫЙ ЭКРАН -->
+    <main id="home-view">
+      <section class="videos-grid" id="videos-container">
+        <div class="video-card"></div>
+        <div class="video-card"></div>
+        <div class="video-card"></div>
+      </section>
+
+      <div class="divider"></div>
+
+      <section class="catalog-grid" id="catalog-container"></section>
+    </main>
+
+    <!-- 2. ЭКРАН КАТЕГОРИИ С ТОВАРАМИ -->
+    <section id="category-view" class="hidden">
+      <div class="top-nav-row">
+        <button class="back-btn" onclick="goBack()">← На главную</button>
+        <span class="current-cat-label" id="current-category-name">Категория</span>
+      </div>
+
+      <!-- Медленно вращающаяся лента квадратиков сверху -->
+      <div class="mini-categories-scroll" id="mini-catalog-container"></div>
+
+      <!-- Крупные прямоугольники товаров снизу -->
+      <div class="products-grid" id="products-container"></div>
+    </section>
+  </div>
+
+  <!-- Нижняя синяя полоса -->
+  <div class="bottom-bar"></div>
+
+  <script>
+    // ==========================================
+    // 1. ССЫЛКИ НА GOOGLE ТАБЛИЦЫ (CSV)
+    // ==========================================
+    const VIDEOS_SHEET_CSV_URL = "";   
+    const PRODUCTS_SHEET_CSV_URL = ""; 
+
+    // ==========================================
+    // 2. ЗАГРУЗКА ВИДЕО
+    // ==========================================
+    async function loadVideos() {
+      const container = document.getElementById("videos-container");
+      let videoUrls = ["", "", ""];
+
+      if (VIDEOS_SHEET_CSV_URL) {
+        try {
+          const response = await fetch(VIDEOS_SHEET_CSV_URL);
+          const csvText = await response.text();
+          const rows = csvText.split("\n").map(r => r.trim()).filter(Boolean);
+          videoUrls = rows.slice(1, 4);
+        } catch (err) {
+          console.error("Ошибка загрузки видео:", err);
+        }
+      }
+
+      container.innerHTML = "";
+      for (let i = 0; i < 3; i++) {
+        const url = videoUrls[i] || "";
+        const card = document.createElement("div");
+        card.className = "video-card";
+        if (url) {
+          card.innerHTML = `<video src="${url}" autoplay muted loop playsinline controls></video>`;
+        }
+        container.appendChild(card);
+      }
+    }
+
+    // ==========================================
+    // 3. ДАННЫЕ КАТАЛОГА (9 КАТЕГОРИЙ)
+    // ==========================================
+    const catalogData = [
+      { id: "cat1", title: "Категория 1", image: "", items: [] },
+      { 
+        id: "cat2", 
+        title: "Авторские короткие шарфики с подвесками в национальном стиле / Авторлық ұлттық алқасымен қысқа шарфтар", 
+        image: "37918-removebg-preview.png", 
+        items: [] 
+      },
+      { id: "cat3", title: "Категория 3", image: "", items: [] },
+      { id: "cat4", title: "Категория 4", image: "", items: [] },
+      { id: "cat5", title: "Категория 5", image: "", items: [] },
+      { id: "cat6", title: "Категория 6", image: "", items: [] },
+      { id: "cat7", title: "Категория 7", image: "", items: [] },
+      { id: "cat8", title: "Категория 8", image: "", items: [] },
+      { id: "cat9", title: "Категория 9", image: "", items: [] }
+    ];
+
+    // ==========================================
+    // 4. ОТРИСОВКА ГЛАВНОГО КАТАЛОГА 3x3
+    // ==========================================
+    function renderMainCatalog() {
+      const container = document.getElementById("catalog-container");
+      container.innerHTML = "";
+
+      catalogData.forEach(cat => {
+        const card = document.createElement("div");
+        card.className = "category-card";
+        card.onclick = () => openCategory(cat.id);
+
+        if (cat.image) {
+          card.innerHTML = `<img src="${cat.image}" alt="${cat.title}">`;
+        }
+        container.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // 5. МЕДЛЕННОЕ АВТОВРАЩЕНИЕ ВЕРХНЕЙ ЛЕНТЫ
+    // ==========================================
+    let autoScrollFrame = null;
+    let isScrollPaused = false;
+    let scrollExactPos = 0;
+
+    function startMiniScroll() {
+      stopMiniScroll();
+      const container = document.getElementById("mini-catalog-container");
+      scrollExactPos = container.scrollLeft;
+
+      function step() {
+        if (!isScrollPaused && container) {
+          scrollExactPos += 0.4; 
+          if (scrollExactPos >= container.scrollWidth / 2) {
+            scrollExactPos = 0;
+          }
+          container.scrollLeft = scrollExactPos;
+        } else if (container) {
+          scrollExactPos = container.scrollLeft;
+        }
+        autoScrollFrame = requestAnimationFrame(step);
+      }
+      autoScrollFrame = requestAnimationFrame(step);
+    }
+
+    function stopMiniScroll() {
+      if (autoScrollFrame) {
+        cancelAnimationFrame(autoScrollFrame);
+        autoScrollFrame = null;
+      }
+    }
+
+    const miniContainerEl = document.getElementById("mini-catalog-container");
+    miniContainerEl.addEventListener("touchstart", () => { isScrollPaused = true; }, { passive: true });
+    miniContainerEl.addEventListener("touchend", () => {
+      setTimeout(() => { isScrollPaused = false; }, 1500);
+    });
+    miniContainerEl.addEventListener("mouseenter", () => { isScrollPaused = true; });
+    miniContainerEl.addEventListener("mouseleave", () => { isScrollPaused = false; });
+
+    // ==========================================
+    // 6. ОТКРЫТИЕ ОКНА КАТЕГОРИИ С ТОВАРАМИ
+    // ==========================================
+    function openCategory(categoryId) {
+      const category = catalogData.find(c => c.id === categoryId);
+      if (!category) return;
+
+      document.getElementById("home-view").classList.add("hidden");
+      document.getElementById("category-view").classList.remove("hidden");
+      document.getElementById("current-category-name").textContent = category.title;
+
+      const miniContainer = document.getElementById("mini-catalog-container");
+      miniContainer.innerHTML = "";
+      const loopedCategories = [...catalogData, ...catalogData];
+
+      loopedCategories.forEach(cat => {
+        const miniCard = document.createElement("div");
+        miniCard.className = "mini-cat-card" + (cat.id === categoryId ? " active" : "");
+        miniCard.onclick = () => openCategory(cat.id);
+
+        if (cat.image) {
+          miniCard.innerHTML = `<img src="${cat.image}" alt="${cat.title}">`;
+        }
+        miniContainer.appendChild(miniCard);
+      });
+
+      isScrollPaused = false;
+      startMiniScroll();
+
+      const productsContainer = document.getElementById("products-container");
+      productsContainer.innerHTML = "";
+
+      const itemsToShow = category.items.length > 0
+        ? category.items
+        : [{}, {}, {}, {}];
+
+      itemsToShow.forEach(item => {
+        const imgTag = item.img ? `<img src="${item.img}" alt="${item.name || ''}">` : "";
+        const infoBlock = (item.name || item.price)
+          ? `<div class="product-info">
+               <div class="product-name">${item.name || ""}</div>
+               <div class="product-price">${item.price || ""}</div>
+             </div>`
+          : "";
+
+        productsContainer.innerHTML += `
+          <div class="product-card">
+            <div class="product-img-wrap">${imgTag}</div>
+            ${infoBlock}
+          </div>
+        `;
+      });
+    }
+
+    function goBack() {
+      stopMiniScroll();
+      document.getElementById("category-view").classList.add("hidden");
+      document.getElementById("home-view").classList.remove("hidden");
+    }
+
+    // Запуск
+    loadVideos();
+    renderMainCatalog();
+  </script>
+
+</body>
+</html>
 
